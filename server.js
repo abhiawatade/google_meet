@@ -2,7 +2,7 @@ const express = require("express");
 
 const app = express();
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 const server = require("http").Server(app);
 
@@ -11,6 +11,7 @@ const io = require("socket.io")(server);
 const { ExpressPeerServer } = require("peer");
 const url = require("url");
 const peerServer = ExpressPeerServer(server, { debug: true });
+
 const path = require("path");
 
 //middleware
@@ -31,10 +32,10 @@ app.get("/join", (req, res) => {
   );
 });
 
-app.get("/joinold/:meeting_id", (req, res) => {
+app.get("/joinold", (req, res) => {
   res.redirect(
     url.format({
-      pathname: req.params.meeting_id,
+      pathname: `/join/${req.query.meeting_id}`,
       query: req.query,
     })
   );
@@ -48,6 +49,7 @@ io.on("connection", (socket) => {
   socket.on("join-room", (roomId, id, myname) => {
     socket.join(roomId);
     socket.to(roomId).broadcast.emit("user-connected", id, myname);
+
     socket.on("tellName", (myname) => {
       socket.to(roomId).broadcast.emit("AddName", myname);
     });
